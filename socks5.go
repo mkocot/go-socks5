@@ -44,13 +44,17 @@ type Config struct {
 
 	// Logger can be used to provide a custom log target.
 	// Defaults to stdout.
-	Logger *log.Logger
+	Logger logger
 
 	// Optional function for dialing out
 	Dial func(ctx context.Context, network, addr string) (net.Conn, error)
 
 	// Enable socks4 support
 	Socks4Support bool
+}
+
+type logger interface {
+	Printf(message string, a ...interface{})
 }
 
 // Server is reponsible for accepting connections and handling
