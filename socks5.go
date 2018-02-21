@@ -155,10 +155,14 @@ func (s *Server) ServeConn(conn net.Conn) error {
 	if err != nil {
 		if err == unrecognizedAddrType {
 			if err := sendReply(conn, addrTypeNotSupported, nil, version[0]); err != nil {
-				return fmt.Errorf("Failed to send reply: %v", err)
+				err = fmt.Errorf("Failed to send reply: %v", err)
+				s.config.Logger.Printf("[ERR] socks: %v", err)
+				return err
 			}
 		}
-		return fmt.Errorf("Failed to read destination address: %v", err)
+		err = fmt.Errorf("Failed to read destination address: %v", err)
+		s.config.Logger.Printf("[ERR] socks: %v", err)
+		return err
 	}
 
 	if version[0] == socks5Version {
