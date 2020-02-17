@@ -1,6 +1,7 @@
 package socks5
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net"
@@ -140,7 +141,16 @@ func NewRequest(bufConn io.Reader, reqVersion byte) (*Request, error) {
 		}
 
 		if n > 0 {
-			request.AuthContext = &AuthContext{UserPassAuth, map[string]string{"Username": string(authStr[:n-1])}}
+			outs := bytes.Split(authStr, []byte("\000"))
+			if len(outs) < 2 {
+				return nil, fmt.Errorf("Failed to get id, fqdn")
+			}
+			request.AuthContext = &AuthContext{UserPassAuth, map[string]string{"Username": string(outs[0])}}
+
+			// SOCKS4A
+			if request.DestAddr.IP == nil {
+				request.DestAddr.FQDN = string(outs[1])
+			}
 		}
 	}
 
@@ -351,7 +361,9 @@ func readAddrSpecv4(r io.Reader) (*AddrSpec, error) {
 	if _, err := io.ReadAtLeast(r, addr, 4); err != nil {
 		return nil, err
 	}
-	d.IP = net.IP(addr)
+	if addr[0] != 0 || addr[1] != 0 || addr[2] != 0 || addr[3] == 0 {
+		d.IP = net.IP(addr)
+	}
 
 	return d, nil
 }
