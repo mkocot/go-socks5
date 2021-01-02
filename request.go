@@ -444,8 +444,5 @@ func proxy(dst io.Writer, src io.Reader, errCh chan error) {
 	if tcpConn, ok := dst.(closeWriter); ok {
 		tcpConn.CloseWrite()
 	}
-	if err == nil {
-		err = io.EOF
-	}
 	errCh <- err
 }
